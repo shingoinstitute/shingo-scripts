@@ -5,8 +5,12 @@
 
 server {
         listen 80 default_server;
+        listen 443 ssl;
         # TODO: CHANGE ME TO CORRECT NAME!
         server_name  *.shingo.org;
+
+        ssl_certificate /etc/ssl/certs/server.crt;
+        ssl_certificate_key /etc/ssl/private/server.key;
 
         location / {
             add_header Access-Control-Allow-Origin $http_origin;

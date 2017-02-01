@@ -151,6 +151,10 @@ NGINX_PATH=(${NGINX//\// })
 NGINX_FILE="${NGINX_PATH[${#NGINX_PATH[@]}-1]}"
 sudo cp ${NGINX} /etc/nginx/sites-available/${NGINX_FILE}
 sudo ln -sf /etc/nginx/sites-available/${NGINX_FILE} /etc/nginx/sites-enabled/${NGINX_FILE}
+ls /etc/ssl/certs/server.crt
+if [ "$?" -ne "0" ]; then
+  error "Couldn't find SSL Certificate! Please place Certificates and Keys at the specified paths in ${NGINX_FILE} or comment out the SSL Config or use the simple config (no SSL)."
+fi
 sudo service nginx restart
 echo -e "${DARK_GREY}"
 ls /etc/nginx/sites-enabled/${NGINX_FILE}
