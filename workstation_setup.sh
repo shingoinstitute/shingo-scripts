@@ -75,7 +75,7 @@ if [ "$?" -ne "0" ]; then
 fi
 message ${GREEN} "Installed VIM...\n"
 message ${GREEN} "Installing build tools (CMake)..."
-sudo apt install cmake
+sudo apt install cmake -y
 if [ "$?" -ne "0" ]; then
    error "CMake failed to install..."
 fi
