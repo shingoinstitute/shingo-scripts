@@ -38,10 +38,10 @@ if [ $# -eq 0 ]; then
 fi
 NGINX="${1}"
 message ${CYAN} "Set <NGINX> to ${NGINX}"
-nvm_version="v0.33.0"
+NVM="v0.33.0"
 if [ $# -eq 2 ]; then
   message ${GREEN} "Setting nvm version to ${2}...\n\n"
-  nvm_version=$2
+  NVM="${2}"
 fi
 # END Argument declaration
 
@@ -51,7 +51,7 @@ message ${GREEN} "**************************************\n"
 # Create swapfile if not present
 echo -e "${DARK_GREY}"
 ls -lh /swapfile
-echo -e "${NC}"NGINX
+echo -e "${NC}"
 if [ "$?" -ne "0" ]; then
     message ${GREEN} "Creating swapfile of 2G..."
     sudo fallocate -l 2G /swapfile
@@ -89,11 +89,11 @@ fi
 message ${GREEN} "Finished installing required libraries...\n"
 
 # Install NVM
-message ${GREEN} "Installing nvm v0.33.0..."
-curl https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh > install.sh
+message ${GREEN} "Installing nvm ${NVM}..."
+curl https://raw.githubusercontent.com/creationix/nvm/${NVM}/install.sh > install.sh
 bash install.sh
 if [ "$?" -ne "0" ]; then
-  error "Failed to install nvm v0.33.0!"
+  error "Failed to install nvm ${NVM}!"
 fi
 source ~/.profile
 echo -e "${DARK_GREY}"
@@ -103,7 +103,7 @@ if [ "$?" -ne "0" ]; then
   error "nvm is not part of your path!"
 fi
 rm install.sh
-message ${GREEN} "Finished installing nvm v0.33.0...\n"
+message ${GREEN} "Finished installing nvm ${NVM}...\n"
 
 # Install most recent node and use it
 message ${GREEN} "Installing most recent version of node..."
@@ -146,14 +146,32 @@ message ${GREEN} "Finished configuring firewall...\n"
 
 # Create desired NGINX server config
 message ${GREEN} "Adding config ${NGINX} to sites available/enabled..."
-sudo rm /etc/nginx/sites-enabled/default
+echo -e "${DARK_GREY}"
+ls /etc/nginx/sites-enabled/default
+echo -e "${NC}"
+if [ "$?" -eq "0" ]; then
+    sudo rm /etc/nginx/sites-enabled/default
+fi
 NGINX_PATH=(${NGINX//\// })
 NGINX_FILE="${NGINX_PATH[${#NGINX_PATH[@]}-1]}"
 sudo cp ${NGINX} /etc/nginx/sites-available/${NGINX_FILE}
 sudo ln -sf /etc/nginx/sites-available/${NGINX_FILE} /etc/nginx/sites-enabled/${NGINX_FILE}
-ls /etc/ssl/certs/server.crt
-if [ "$?" -ne "0" ]; then
-  error "Couldn't find SSL Certificate! Please place Certificates and Keys at the specified paths in ${NGINX_FILE} or comment out the SSL Config or use the simple config (no SSL)."
+if [[ "${NGINX_FILE}" =~ ^.*ssl.*$ ]]; then
+    ls /etc/ssl/certs/server.crt
+    if [ "$?" -ne "0" ]; then
+        error "Couldn't find SSL Certificate! Please place Certificates and Keys at the specified paths in ${NGINX_FILE} or comment out the SSL Config."
+    else
+        message ${GREEN} "Using simple nginx config if found"
+        ls ./nginx_config/simple_nginx
+        if [ "$?" -eq "0" ]; then
+          sudo cp ./nginx_config/simple_nginx /etc/nginx/sites-available/simple_nginx
+          sudo rm /etc/nginx/sites-enabled/${NGINX_FILE}
+          sudo ln -sf /etc/nginx/sites-available/simple_nginx /etc/nginx/sites-enabled/simple_nginx
+          message ${GREEN} "Configured NGINX using simple config"
+        else
+          error "Couldn't find simple_nginx config..."
+        fi
+    fi
 fi
 sudo service nginx restart
 echo -e "${DARK_GREY}"
@@ -172,11 +190,11 @@ if [ "$?" -ne "0" ]; then
     message ${GREEN} "Setting up mysql server..."
     sudo apt install mysql-server -y
     if [ "$?" -ne "0" ]; then
-    error "Couldn't install MySQL server!"
+        error "Couldn't install MySQL server!"
     fi
     sudo mysql_secure_installation
     if [ "$?" -ne "0" ]; then
-    error "Couldn't configure MySQL!"
+        error "Couldn't configure MySQL!"
     fi
     message ${GREEN} "Installed and configured MySQL server...\n\n"
 fi
