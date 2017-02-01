@@ -49,10 +49,8 @@ message ${GREEN} "        Starting Server Setup!"
 message ${GREEN} "**************************************\n"
 
 # Create swapfile if not present
-echo -e "${DARK_GREY}"
 HAS_SWAP="$(sudo ls -lh /swapfile)"
-echo -e "${NC}"
-if [ "${HAS_SWAP}" =~ ^.*cannot.* ]; then
+if [ ["${HAS_SWAP}" =~ ^.*cannot.*] ]; then
     message ${GREEN} "Creating swapfile of 2G..."
     sudo fallocate -l 2G /swapfile
     ls -lh /swapfile
@@ -96,9 +94,8 @@ if [ "$?" -ne "0" ]; then
   error "Failed to install nvm ${NVM}!"
 fi
 source ~/.profile
-echo -e "${DARK_GREY}"
 NVM_SUCCED="$(nvm --version)"
-echo -e "${NC}"
+message ${DARK_GREY}${NVM_SUCCED}
 if [ "v${NVM_SUCCED}" -ne "${NVM}" ]; then
   error "nvm is not part of your path!"
 fi
@@ -114,10 +111,9 @@ fi
 nvm alias default node
 nvm use default
 message ${CYAN} "Node version installed is"
-echo -e "${DARK_GREY}"
 NODE_SUCCED="$(node --version)"
-echo -e "${NC}"
-if [ "${NODE_SUCCED}" =~ ^v[0-9]\.[0-9].[0-9]$ ]; then
+message ${DARK_GREY}${NODE_SUCCED}
+if [ ["${NODE_SUCCED}" =~ ^v[0-9]\.[0-9].[0-9]$] ]; then
   error "Couldn't find node!"
 fi
 
@@ -146,9 +142,7 @@ message ${GREEN} "Finished configuring firewall...\n"
 
 # Create desired NGINX server config
 message ${GREEN} "Adding config ${NGINX} to sites available/enabled..."
-echo -e "${DARK_GREY}"
 HAS_DEFAULT="$(ls /etc/nginx/sites-enabled/default)"
-echo -e "${NC}"
 if [ "${HAS_DEFAULT}" -eq "/etc/nginx/sites-enabled/default" ]; then
     sudo rm /etc/nginx/sites-enabled/default
 fi
@@ -157,13 +151,12 @@ NGINX_FILE="${NGINX_PATH[${#NGINX_PATH[@]}-1]}"
 sudo cp ${NGINX} /etc/nginx/sites-available/${NGINX_FILE}
 sudo ln -sf /etc/nginx/sites-available/${NGINX_FILE} /etc/nginx/sites-enabled/${NGINX_FILE}
 if [[ "${NGINX_FILE}" =~ ^.*ssl.*$ ]]; then
-    ls /etc/ssl/certs/server.crt
-    if [ "$?" -ne "0" ]; then
+    HAS_CERT="$(ls /etc/ssl/certs/server.crt)"
+    if [ "${HAS_CERT}" -ne "/etc/ssl/certs/server.crt" ]; then
         error "Couldn't find SSL Certificate! Please place Certificates and Keys at the specified paths in ${NGINX_FILE} or comment out the SSL Config."
-    else
         message ${GREEN} "Using simple nginx config if found"
         HAS_SIMPLE="$(ls ./nginx_config/simple_nginx)"
-        if [ "${HAS_SIMPLE}" =~ ^.*simple_nginx$ ]; then
+        if [ ["${HAS_SIMPLE}" =~ ^.*simple_nginx$] ]; then
           sudo cp ./nginx_config/simple_nginx /etc/nginx/sites-available/simple_nginx
           sudo rm /etc/nginx/sites-enabled/${NGINX_FILE}
           sudo ln -sf /etc/nginx/sites-available/simple_nginx /etc/nginx/sites-enabled/simple_nginx
@@ -174,19 +167,15 @@ if [[ "${NGINX_FILE}" =~ ^.*ssl.*$ ]]; then
     fi
 fi
 sudo service nginx restart
-echo -e "${DARK_GREY}"
 HAS_CONFIG="$(ls /etc/nginx/sites-enabled/${NGINX_FILE})"
 if [ "$HAS_CONFIG" -ne "/etc/nginx/sites-enabled/${NGINX_FILE}" ]; then
   error "Couldn't configure NGINX!"
 fi
-echo -e "${NC}"
 message ${GREEN} "Added NGINX config and reset server!\n"
 
 # Install and configure MySQL server if not present
-echo -e "${DARK_GREY}"
 HAS_MYSQL="$(mysql --version)"
-echo -e "${NC}"
-if [ "${HAS_MYSQL}" =~ ^.*program.*$ ]; then
+if [ ["${HAS_MYSQL}" =~ ^.*program.*$] ]; then
     message ${GREEN} "Setting up mysql server..."
     sudo apt install mysql-server -y
     if [ "$?" -ne "0" ]; then
