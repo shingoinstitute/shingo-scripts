@@ -29,6 +29,12 @@ function error (){
 function message(){
   echo -e "${1}${2}${NC}"
 }
+function turngreyon(){
+  echo -e "${DARK_GREY}"
+}
+function turncoloroff(){
+  echo -e "${NC}"
+}
 # END Function declarations
 
 # BEGIN Argument declaration
@@ -49,20 +55,24 @@ message ${GREEN} "        Starting Server Setup!"
 message ${GREEN} "**************************************\n"
 
 # Create swapfile if not present
+turngreyon
 HAS_SWAP="$(sudo ls -lh /swapfile)"
-if [ ["${HAS_SWAP}" =~ ^.*cannot.*] ]; then
+turncoloroff
+if [[ "${HAS_SWAP}" =~ ^.*cannot.* ]]; then
     message ${GREEN} "Creating swapfile of 2G..."
     sudo fallocate -l 2G /swapfile
-    ls -lh /swapfile
-    if [ "$?" -ne "0" ]; then
-    error "Failed to create swapfile!"
+    turngreyon
+    HAS_SWAP="$(ls -lh /swapfile)"
+    turncoloroff
+    if [[ "${HAS_SWAP}" =~ ^.*cannot.* ]]; then
+        error "Failed to create swapfile!"
     fi
     sudo chmod 600 /swapfile
     sudo mkswap /swapfile
     sudo swapon /swapfile
     sudo echo "/swapfile   none    swap    sw    0   0" >> /etc/fstab
     if [ "$?" -ne "0" ]; then
-    error "Failed to configure swapfile!"
+        error "Failed to configure swapfile!"
     fi
     message ${GREEN} "Created and configured swapfile:"
     sudo swapon -s
@@ -94,7 +104,9 @@ if [ "$?" -ne "0" ]; then
   error "Failed to install nvm ${NVM}!"
 fi
 source ~/.profile
+turngreyon
 NVM_SUCCED="$(nvm --version)"
+turncoloroff
 message ${DARK_GREY}${NVM_SUCCED}
 if [ "v${NVM_SUCCED}" -ne "${NVM}" ]; then
   error "nvm is not part of your path!"
@@ -111,9 +123,11 @@ fi
 nvm alias default node
 nvm use default
 message ${CYAN} "Node version installed is"
+turngreyon
 NODE_SUCCED="$(node --version)"
+turncoloroff
 message ${DARK_GREY}${NODE_SUCCED}
-if [ ["${NODE_SUCCED}" =~ ^v[0-9]\.[0-9].[0-9]$] ]; then
+if [[ "${NODE_SUCCED}" =~ ^v[0-9]\.[0-9].[0-9]$ ]]; then
   error "Couldn't find node!"
 fi
 
@@ -142,7 +156,9 @@ message ${GREEN} "Finished configuring firewall...\n"
 
 # Create desired NGINX server config
 message ${GREEN} "Adding config ${NGINX} to sites available/enabled..."
+turngreyon
 HAS_DEFAULT="$(ls /etc/nginx/sites-enabled/default)"
+turncoloroff
 if [ "${HAS_DEFAULT}" -eq "/etc/nginx/sites-enabled/default" ]; then
     sudo rm /etc/nginx/sites-enabled/default
 fi
@@ -151,12 +167,16 @@ NGINX_FILE="${NGINX_PATH[${#NGINX_PATH[@]}-1]}"
 sudo cp ${NGINX} /etc/nginx/sites-available/${NGINX_FILE}
 sudo ln -sf /etc/nginx/sites-available/${NGINX_FILE} /etc/nginx/sites-enabled/${NGINX_FILE}
 if [[ "${NGINX_FILE}" =~ ^.*ssl.*$ ]]; then
+    turngreyon
     HAS_CERT="$(ls /etc/ssl/certs/server.crt)"
+    turncoloroff
     if [ "${HAS_CERT}" -ne "/etc/ssl/certs/server.crt" ]; then
         error "Couldn't find SSL Certificate! Please place Certificates and Keys at the specified paths in ${NGINX_FILE} or comment out the SSL Config."
         message ${GREEN} "Using simple nginx config if found"
+        turngreyon
         HAS_SIMPLE="$(ls ./nginx_config/simple_nginx)"
-        if [ ["${HAS_SIMPLE}" =~ ^.*simple_nginx$] ]; then
+        turncoloroff
+        if [[ "${HAS_SIMPLE}" =~ ^.*simple_nginx$ ]]; then
           sudo cp ./nginx_config/simple_nginx /etc/nginx/sites-available/simple_nginx
           sudo rm /etc/nginx/sites-enabled/${NGINX_FILE}
           sudo ln -sf /etc/nginx/sites-available/simple_nginx /etc/nginx/sites-enabled/simple_nginx
@@ -167,15 +187,19 @@ if [[ "${NGINX_FILE}" =~ ^.*ssl.*$ ]]; then
     fi
 fi
 sudo service nginx restart
+turngreyon
 HAS_CONFIG="$(ls /etc/nginx/sites-enabled/${NGINX_FILE})"
+turncoloroff
 if [ "$HAS_CONFIG" -ne "/etc/nginx/sites-enabled/${NGINX_FILE}" ]; then
   error "Couldn't configure NGINX!"
 fi
 message ${GREEN} "Added NGINX config and reset server!\n"
 
 # Install and configure MySQL server if not present
+turngreyon
 HAS_MYSQL="$(mysql --version)"
-if [ ["${HAS_MYSQL}" =~ ^.*program.*$] ]; then
+turncoloroff
+if [[ "${HAS_MYSQL}" =~ ^.*program.*$ ]]; then
     message ${GREEN} "Setting up mysql server..."
     sudo apt install mysql-server -y
     if [ "$?" -ne "0" ]; then
