@@ -58,13 +58,13 @@ message ${GREEN} "**************************************\n"
 turngreyon
 HAS_SWAP="$(sudo ls -lh /swapfile)"
 turncoloroff
-if [[ "${HAS_SWAP}" =~ ^.*cannot.* ]]; then
+if [ -z "${HAS_SWAP}" ]; then
     message ${GREEN} "Creating swapfile of 2G..."
     sudo fallocate -l 2G /swapfile
     turngreyon
     HAS_SWAP="$(ls -lh /swapfile)"
     turncoloroff
-    if [[ "${HAS_SWAP}" =~ ^.*cannot.* ]]; then
+    if [ -z "${HAS_SWAP}" ]; then
         error "Failed to create swapfile!"
     fi
     sudo chmod 600 /swapfile
@@ -108,7 +108,7 @@ turngreyon
 NVM_SUCCED="$(nvm --version)"
 turncoloroff
 message ${DARK_GREY}${NVM_SUCCED}
-if [ "v${NVM_SUCCED}" -ne "${NVM}" ]; then
+if [ "v${NVM_SUCCED}" != "${NVM}" ]; then
   error "nvm is not part of your path!"
 fi
 rm install.sh
@@ -127,17 +127,17 @@ turngreyon
 NODE_SUCCED="$(node --version)"
 turncoloroff
 message ${DARK_GREY}${NODE_SUCCED}
-if [[ "${NODE_SUCCED}" =~ ^v[0-9]\.[0-9].[0-9]$ ]]; then
+if [[ "${NODE_SUCCED}" =~ ^v[0-9]\.[0-9]\.[0-9]$ ]]; then
+    # Install bower and sails
+    message ${GREEN} "Installing bower and sails globally..."
+    npm install -g bower sails
+    if [ "$?" -ne "0" ]; then
+        error "Couldn't install bower of sails!"
+    fi
+    message ${GREEN} "Finished installing bower and sails...\n"
+else
   error "Couldn't find node!"
 fi
-
-# Install bower and sails
-message ${GREEN} "Installing bower and sails globally..."
-npm install -g bower sails
-if [ "$?" -ne "0" ]; then
-  error "Couldn't install bower of sails!"
-fi
-message ${GREEN} "Finished installing bower and sails...\n"
 
 # Install NGINX
 message ${GREEN} "Installing NGINX..."
@@ -159,7 +159,7 @@ message ${GREEN} "Adding config ${NGINX} to sites available/enabled..."
 turngreyon
 HAS_DEFAULT="$(ls /etc/nginx/sites-enabled/default)"
 turncoloroff
-if [ "${HAS_DEFAULT}" -eq "/etc/nginx/sites-enabled/default" ]; then
+if [ "${HAS_DEFAULT}" == "/etc/nginx/sites-enabled/default" ]; then
     sudo rm /etc/nginx/sites-enabled/default
 fi
 NGINX_PATH=(${NGINX//\// })
@@ -170,13 +170,13 @@ if [[ "${NGINX_FILE}" =~ ^.*ssl.*$ ]]; then
     turngreyon
     HAS_CERT="$(ls /etc/ssl/certs/server.crt)"
     turncoloroff
-    if [ "${HAS_CERT}" -ne "/etc/ssl/certs/server.crt" ]; then
+    if [ "${HAS_CERT}" != "/etc/ssl/certs/server.crt" ]; then
         error "Couldn't find SSL Certificate! Please place Certificates and Keys at the specified paths in ${NGINX_FILE} or comment out the SSL Config."
         message ${GREEN} "Using simple nginx config if found"
         turngreyon
         HAS_SIMPLE="$(ls ./nginx_config/simple_nginx)"
         turncoloroff
-        if [[ "${HAS_SIMPLE}" =~ ^.*simple_nginx$ ]]; then
+        if [ -z "${HAS_SIMPLE}" ]; then
           sudo cp ./nginx_config/simple_nginx /etc/nginx/sites-available/simple_nginx
           sudo rm /etc/nginx/sites-enabled/${NGINX_FILE}
           sudo ln -sf /etc/nginx/sites-available/simple_nginx /etc/nginx/sites-enabled/simple_nginx
@@ -190,7 +190,7 @@ sudo service nginx restart
 turngreyon
 HAS_CONFIG="$(ls /etc/nginx/sites-enabled/${NGINX_FILE})"
 turncoloroff
-if [ "$HAS_CONFIG" -ne "/etc/nginx/sites-enabled/${NGINX_FILE}" ]; then
+if [ "$HAS_CONFIG" != "/etc/nginx/sites-enabled/${NGINX_FILE}" ]; then
   error "Couldn't configure NGINX!"
 fi
 message ${GREEN} "Added NGINX config and reset server!\n"
@@ -199,7 +199,7 @@ message ${GREEN} "Added NGINX config and reset server!\n"
 turngreyon
 HAS_MYSQL="$(mysql --version)"
 turncoloroff
-if [[ "${HAS_MYSQL}" =~ ^.*program.*$ ]]; then
+if [ -z "${HAS_MYSQL}" ]; then
     message ${GREEN} "Setting up mysql server..."
     sudo apt install mysql-server -y
     if [ "$?" -ne "0" ]; then
