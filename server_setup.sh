@@ -129,12 +129,12 @@ turncoloroff
 message ${DARK_GREY}${NODE_SUCCED}
 if [[ "${NODE_SUCCED}" =~ ^v[0-9]\.[0-9]\.[0-9]$ ]]; then
     # Install bower and sails
-    message ${GREEN} "Installing bower and sails globally..."
-    npm install -g bower sails
+    message ${GREEN} "Installing bower, sails, grunt, and forever globally..."
+    npm install -g bower sails grunt forever
     if [ "$?" -ne "0" ]; then
-        error "Couldn't install bower of sails!"
+        error "Couldn't install bower, sails, grunt, or forever!"
     fi
-    message ${GREEN} "Finished installing bower and sails...\n"
+    message ${GREEN} "Finished installing bower, sails, grunt, and forever...\n"
 else
   error "Couldn't find node!"
 fi
